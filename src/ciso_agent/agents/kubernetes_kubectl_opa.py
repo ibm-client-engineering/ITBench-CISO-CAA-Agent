@@ -23,8 +23,11 @@ from crewai import Agent, Crew, Process, Task
 from dotenv import load_dotenv
 from langtrace_python_sdk import langtrace
 
-from ciso_agent.llm import init_agent_llm
-from ciso_agent.tools import GenerateOPARegoTool, RunKubectlTool, RunOPARegoTool, extract_code
+from ciso_agent.llm import init_agent_llm, extract_code
+from ciso_agent.tools.generate_opa_rego import GenerateOPARegoTool
+from ciso_agent.tools.run_opa_rego import RunOPARegoTool
+from ciso_agent.tools.run_kubectl import RunKubectlTool
+
 
 load_dotenv()
 
