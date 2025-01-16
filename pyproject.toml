@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "ciso_agent"
+version = "0.1.0"
+description = "CISO Agent using crewAI"
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<=3.13"
+crewai = { extras = ["tools"], version = ">=0.75.1,<1.0.0" }
+langgraph = ">=0.2.39"
+gitpython = "*"
+langtrace-python-sdk = "*"
+langchain_ibm = ">=0.3.2"
+litellm = "<=1.49.4"
+
+[tool.poetry.scripts]
+ciso_run = "ciso_agent.main:run"
+run_crew = "ciso_agent.main:run"
+train = "ciso_agent.main:train"
+replay = "ciso_agent.main:replay"
+test = "ciso_agent.main:test"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 150
+target-version = ['py37', 'py38', 'py39', 'py310', 'py311']
+force-exclude = '''
+/(
+\.venv
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 150
