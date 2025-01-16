@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from caa_agent.llm import init_agent_llm
+from ciso_agent.llm import init_agent_llm
 
 from dotenv import load_dotenv
 
