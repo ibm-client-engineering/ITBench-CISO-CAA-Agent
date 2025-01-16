@@ -8,29 +8,6 @@
 $ pip install -e .
 ```
 
-<!--
-This will install `crewai` command
--->
-
-<!--
-### 2. Install a dependency in github.ibm.com
-
-```bash
-$ export C2PPP_DIR=<DIR_FOR_DEPENDENCY>
-$ mkdir $C2PPP_DIR
-$ git clone git@github.ibm.com:compliance-and-policy/c2ppp.git $C2PPP_DIR
-$ pip install -e $C2PPP_DIR
-```
-
-NOTE: If you have encountered version inconsistency caused by Trestle, you can ignore it for now.
-
-### 3. Install CrewAI dependencies
-
-```bash
-$ crewai install
-```
--->
-
 ### 2. (OPTIONAL) Set up Langtrace instance
 
 You can use LangTrace to record & check LLM interactions.
@@ -48,7 +25,7 @@ OPENAI_API_KEY = <YOUR_OPENAI_API_KEY>
 OPENAI_MODEL_NAME = gpt-4o-mini
 CODE_GEN_MODEL = gpt-4o-mini
 MANAGER_AGENT_MODEL_NAME = gpt-4o-mini
-
+```
 
 ### 4. Prepare environment with bundle
 
