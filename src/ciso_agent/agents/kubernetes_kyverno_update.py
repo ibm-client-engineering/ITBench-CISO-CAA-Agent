@@ -79,7 +79,7 @@ Once you get a final answer, you can quit the work.
     def kickoff(self, inputs: dict):
         return self.run_scenario(**inputs)
 
-    def run_scenario(self, current_compliance: str, updated_compliance: str, **kwargs):
+    def run_scenario(self, goal: str, **kwargs):
         workdir = self.workdir_root + "/" + datetime.datetime.now(datetime.UTC).strftime("%Y%m%d_%H%M%S")
         if not os.path.exists(workdir):
             os.makedirs(workdir, exist_ok=True)
@@ -92,9 +92,7 @@ Once you get a final answer, you can quit the work.
         llm = init_agent_llm()
         test_agent = Agent(
             role="Test",
-            goal=string.Template(self.agent_goal).safe_substitute(
-                {"current_compliance": current_compliance, "updated_compliance": updated_compliance}
-            ),
+            goal=goal,
             backstory="",
             tools=[
                 RunKubectlTool(workdir=workdir, read_only=False),

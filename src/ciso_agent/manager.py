@@ -64,7 +64,6 @@ class CISOState(TypedDict):
     workdir: str
 
     # set by task_selector node
-    compliance: str
     action_sequence: list = []
     task_index: int = 0
     route: str
@@ -114,7 +113,6 @@ class CISOManager:
         print("\033[36m" + "=" * 90 + "\033[0m")
         print("\033[36m" + state["goal"] + "\033[0m")
         print("")
-        state["compliance"] = ""
         state["action_sequence"] = []
         state["task_index"] = 0
         state["route"] = ""
@@ -151,7 +149,6 @@ Goal:
 Expected Output:
 ```json
 {{
-    "compliance": "just one setence of compliance requirement description",
     "kubeconfig": "if the path to kubeconfig is provided, set it to this",
     "ansible_inventory": "if the path to Ansible inventory file is provided, set it to this",
     "workdir": "if the path to workdir is provided, set it to this"
@@ -167,7 +164,6 @@ Expected Output:
         if "```" in answer:
             answer = extract_code(answer, code_type="json")
         data = json.loads(answer)
-        compliance = data.get("compliance")
         kubeconfig = data.get("kubeconfig")
         ansible_inventory = data.get("ansible_inventory")
         workdir = data.get("workdir")
@@ -216,7 +212,6 @@ Expected Output:
         ]
 
         return {
-            "compliance": compliance,
             "kubeconfig": kubecfg_path,
             "ansible_inventory": inventory_path,
             "workdir": workdir,
