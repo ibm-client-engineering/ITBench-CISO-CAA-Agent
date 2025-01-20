@@ -12,6 +12,7 @@ gitpython = "*"
 langtrace-python-sdk = "*"
 langchain_ibm = ">=0.3.2"
 litellm = "<=1.49.4"
+botocore = ">=1.36.1"
 
 [tool.poetry.scripts]
 ciso_run = "ciso_agent.main:run"
