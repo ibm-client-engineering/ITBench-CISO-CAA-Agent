@@ -130,4 +130,12 @@ for this example input data.
         with open(opath, "w") as f:
             f.write(code)
         print("Code in answer:", code)
-        return code
+
+        tool_output = f"""The generated policy is below:
+```rego
+{code}
+```
+
+This policy file has been saved at {opath}.
+"""
+        return tool_output

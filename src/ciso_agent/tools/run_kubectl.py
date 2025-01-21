@@ -37,6 +37,7 @@ This tool returns the following:
   - return_code: if 0, the command was successful, otherwise, failure.
   - stdout: standard output of the command (only when `return_output` is True)
   - stderr: standard error of the command (only when error occurred)
+  - script_file: saved script path if applicable
 
 For example, to execute `kubectl get pod -n default --kubeconfig kubeconfig.yaml`,
 Tool Input should be the following:
@@ -123,16 +124,18 @@ Hint:
 
         if script_file:
             cmd_str_ext = cmd_str
-            actual_kubeconfig = os.path.join(self.workdir, "kubeconfig.yaml")
-            cmd_str_ext = cmd_str_ext.replace("kubeconfig.yaml", actual_kubeconfig)
             if output_file:
                 cmd_str_ext += f" > {output_file}"
             script_body = f"""#!/bin/bash
 {cmd_str_ext}
 """
-            spath = os.path.join(self.workdir, script_file)
+            spath = script_file
+            if "/" not in script_file:
+                spath = os.path.join(self.workdir, script_file)
             with open(spath, "w") as f:
                 f.write(script_body)
             os.chmod(spath, 0o755)
+            
+            return_val["script_file"] = spath
 
         return return_val

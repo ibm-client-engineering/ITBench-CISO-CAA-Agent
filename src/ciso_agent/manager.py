@@ -192,8 +192,8 @@ Expected Output:
             )
         elif "kubectl" in goal_lower and "opa" in goal_lower:
             agent_task = Action(
-                description="kubernetes_kyverno",
-                node="kubernetes_kyverno",
+                description="kubernetes_kubectl_opa",
+                node="kubernetes_kubectl_opa",
             )
         elif "rhel" in goal_lower and "playbook" in goal_lower:
             agent_task = Action(
@@ -242,10 +242,43 @@ Expected Output:
         return "reporter"
 
     def reporter(self, state: CISOState):
+        # add workdir prefix first
         result = state["result"]
+        
+        workdir = state.get("workdir")
+        if isinstance(result, dict) and workdir:
+            for key, val in result.items():
+                if key.startswith("path_to_") and "/" not in val:
+                    result[key] = os.path.join(workdir, val)
 
         # save graph.png to use it in the report.md
         self.save_graph()
+
+        policy_path_1 = os.path.join(workdir, "policy.yaml")
+        policy_path_2 = os.path.join(workdir, "policy.rego")
+        policy_block = ""
+        if os.path.exists(policy_path_1):
+            policy = ""
+            with open(policy_path_1, "r") as f:
+                policy = f.read()
+            policy_block = f"""
+Generated Policy:
+```yaml
+{policy}
+```
+
+"""
+        elif os.path.exists(policy_path_2):
+            policy = ""
+            with open(policy_path_2, "r") as f:
+                policy = f.read()
+            policy_block = f"""
+Generated Policy:
+```rego
+{policy}
+```
+
+"""
 
         manager_model = os.getenv("MANAGER_AGENT_MODEL_NAME", "gpt-4o-mini")
         manager_api_key = os.getenv("MANAGER_AGENT_API_KEY")
@@ -289,6 +322,8 @@ Your answer will be saved as a Markdown file later.
 
 Goal: {goal}
 
+{policy_block}
+
 Result:
 {result}
 """
@@ -303,7 +338,7 @@ Result:
         if "```markdown" in report:
             report = report.lstrip("```markdown").rstrip("```")
 
-        opath = "report.md"
+        opath = os.path.join(workdir, "report.md") if workdir else "report.md"
         with open(opath, "w") as f:
             f.write(report)
         result["path_to_generated_report"] = opath

@@ -72,13 +72,16 @@ Once you get a final answer, you can quit the work.
         "path_to_collected_data_by_playbook": "a string of the filepath to the collected data",
     }
 
-    workdir_root: str = "/tmp/ciso-agent/workspace"
+    workdir_root: str = "/tmp/agent/"
 
     def kickoff(self, inputs: dict):
         return self.run_scenario(**inputs)
 
     def run_scenario(self, goal: str, **kwargs):
-        workdir = self.workdir_root + "/" + datetime.datetime.now(datetime.UTC).strftime("%Y%m%d_%H%M%S")
+        workdir = kwargs.get("workdir")
+        if not workdir:
+            workdir = os.path.join(self.workdir_root, datetime.datetime.now(datetime.UTC).strftime("%Y%m%d%H%M%S_"), "workspace")
+
         if not os.path.exists(workdir):
             os.makedirs(workdir, exist_ok=True)
 

@@ -95,4 +95,12 @@ Points:
         with open(fpath, "w") as f:
             f.write(code)
         print("Code in answer:", code)
+
+        tool_output = f"""The generated Playbook is below:
+```yaml
+{code}
+```
+
+This Playbook file has been saved at {fpath}.
+"""
         return code
