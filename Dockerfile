@@ -1,17 +1,24 @@
 # User `bench-server` as a base image here
 # because it is a minimum image of agent-bench-automation codes
+FROM bench-server:latest AS base
+
+RUN mkdir /etc/ciso-agent
+WORKDIR /etc/ciso-agent
+
+COPY requirements-dev.txt /etc/ciso-agent/requirements-dev.txt
+# ciso-agent deps are many, so install them here (this reduce the time for installing code changes later)
+RUN python -m venv .venv && source .venv/bin/activate && pip install -r requirements-dev.txt --no-cache-dir
+
+#-----------------
+# second stage
+#-----------------
 FROM bench-server:latest
+COPY --from=base /etc/ciso-agent /etc/ciso-agent
+
+WORKDIR /etc/ciso-agent
 
 # need unzip for `aws` command
 RUN apt update -y && apt install -y unzip
-
-RUN mkdir /etc/ciso-agent
-COPY src /etc/ciso-agent/src
-COPY pyproject.toml /etc/ciso-agent/pyproject.toml
-COPY agent-harness.yaml /etc/ciso-agent/agent-harness.yaml
-
-WORKDIR /etc/ciso-agent
-RUN python -m venv .venv && source .venv/bin/activate && pip install -e /etc/ciso-agent --no-cache-dir
 
 # install `ansible-playbook`
 RUN source .venv/bin/activate && pip install ansible-core jmespath kubernetes --no-cache-dir
@@ -30,6 +37,12 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "aws
 RUN curl -L -o opa https://github.com/open-policy-agent/opa/releases/download/v1.0.0/opa_linux_$(dpkg --print-architecture)_static && \
     chmod +x ./opa && \
     mv ./opa /usr/local/bin/opa
+
+COPY src /etc/ciso-agent/src
+COPY pyproject.toml /etc/ciso-agent/pyproject.toml
+COPY agent-harness.yaml /etc/ciso-agent/agent-harness.yaml
+
+RUN source .venv/bin/activate && pip install -e /etc/ciso-agent --no-cache-dir
 
 # Agent is executed by agent-harness of agent-bench-automation, so workdir should be agent-benchmark
 WORKDIR /etc/agent-benchmark
