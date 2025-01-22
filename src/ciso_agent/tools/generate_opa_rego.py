@@ -17,6 +17,7 @@ import os
 from typing import Callable, Union
 
 from ciso_agent.llm import call_llm, extract_code
+from ciso_agent.tools.utils import trim_quote
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
@@ -49,6 +50,9 @@ class GenerateOPARegoTool(BaseTool):
 
     def _run(self, sentence: Union[str, dict], policy_file: str, input_file: str) -> str:
         print("GenerateOPARegoTool is called")
+        policy_file = trim_quote(policy_file)
+        input_file = trim_quote(input_file)
+
         spec = sentence
         if isinstance(spec, dict):
             try:

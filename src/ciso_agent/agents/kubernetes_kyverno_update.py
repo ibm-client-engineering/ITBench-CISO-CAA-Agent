@@ -98,10 +98,6 @@ Once you get a final answer, you can quit the work.
             role="Test",
             goal=goal,
             backstory="",
-            tools=[
-                RunKubectlTool(workdir=workdir, read_only=False),
-                GenerateKyvernoTool(workdir=workdir),
-            ],
             llm=llm,
             verbose=True,
         )
@@ -111,6 +107,10 @@ Once you get a final answer, you can quit the work.
             description="""Get the Kyverno policy and generate the updated one based on it. Then deploy it on the cluster.""",
             expected_output="""A boolean which indicates if the result is OK or not""",
             agent=test_agent,
+            tools=[
+                RunKubectlTool(workdir=workdir, read_only=False),
+                GenerateKyvernoTool(workdir=workdir),
+            ],
         )
         report_task = Task(
             name="report_task",

@@ -210,6 +210,7 @@ Expected Output:
             agent_task,
             reporter_task,
         ]
+        print("Task Selection Result:", agent_task.get("node"))
 
         return {
             "kubeconfig": kubecfg_path,
@@ -248,7 +249,7 @@ Expected Output:
         workdir = state.get("workdir")
         if isinstance(result, dict) and workdir:
             for key, val in result.items():
-                if key.startswith("path_to_") and "/" not in val:
+                if val and key.startswith("path_to_") and "/" not in val:
                     result[key] = os.path.join(workdir, val)
 
         # save graph.png to use it in the report.md

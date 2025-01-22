@@ -17,6 +17,7 @@ import os
 from typing import Callable, Union
 
 from ciso_agent.llm import call_llm, extract_code
+from ciso_agent.tools.utils import trim_quote
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
@@ -26,7 +27,7 @@ class GenerateKyvernoToolInput(BaseModel):
         description="A short description of Kyverno policy to be generated. This includes what is validated with the Kyverno policy."
     )
     policy_file: str = Field(description="filepath for the Kyverno policy to be saved.")
-    current_policy_file: str = Field(
+    current_policy_file: Union[str, None] = Field(
         description="filepath of the current Kyverno policy to be updated. Only needed when updating an existing policy", default=""
     )
 
@@ -54,6 +55,12 @@ class GenerateKyvernoTool(BaseTool):
 
     def _run(self, sentence: Union[str, dict], policy_file: str, current_policy_file: str = "") -> str:
         print("GenerateKyvernoTool is called")
+        policy_file = trim_quote(policy_file)
+        current_policy_file = trim_quote(current_policy_file)
+
+        if current_policy_file and current_policy_file == "None":
+            current_policy_file = None
+
         spec = sentence
         if isinstance(spec, dict):
             try:

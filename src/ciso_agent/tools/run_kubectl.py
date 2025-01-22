@@ -18,6 +18,7 @@ from typing import Callable
 
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
+from ciso_agent.tools.utils import trim_quote
 
 
 class RunKubectlToolInput(BaseModel):
@@ -64,6 +65,9 @@ Hint:
 
     def _run(self, args: str, output_file: str, return_output: str = "False", script_file: str = "") -> str:
         print("RunKubectlTool is called")
+        output_file = trim_quote(output_file)
+        script_file = trim_quote(script_file)
+
         if "--kubeconfig" not in args:
             raise ValueError("--kubeconfig must be specified to avoid touching wrong cluster")
 

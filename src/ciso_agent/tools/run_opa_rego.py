@@ -19,6 +19,7 @@ from typing import Callable
 
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
+from ciso_agent.tools.utils import trim_quote
 
 
 class RunOPARegoToolInput(BaseModel):
@@ -46,6 +47,9 @@ class RunOPARegoTool(BaseTool):
 
     def _run(self, policy_file: str, input_file: str) -> str:
         print("RunOPARegoTool is called")
+        policy_file = trim_quote(policy_file)
+        input_file = trim_quote(input_file)
+
         fpath = os.path.join(self.workdir, policy_file)
         rego_pkg_name = get_rego_main_package_name(rego_path=fpath)
         if not rego_pkg_name:

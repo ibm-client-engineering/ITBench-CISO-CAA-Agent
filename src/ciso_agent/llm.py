@@ -101,7 +101,12 @@ def get_watsonx_model_params(model: str):
     temperature = float(os.getenv("LLM_TEMPERATURE", "0.0"))
 
     # Parameters for Granite 3.x
-    granite_3_params = {"temperature": temperature, "max_new_tokens": 4096}
+    granite_3_params = {
+        "temperature": temperature,
+        "max_new_tokens": 4096,
+        "repetition_penalty": 1,
+        "decoding_method": "greedy"
+    }
     # Parameters for Llama-3-1-70b-instruct
     llama_3_1_70b_params = {"temperature": temperature, "max_new_tokens": 8192}
     # Parameters for Llama-3-405b-instruct
@@ -148,7 +153,7 @@ def call_llm(prompt: str, model: str = "", api_key: str = "", api_url: str = "")
     model_lower = model.lower()
     system_prompt = ""
     if "llama" in model_lower:
-        system_prompt = """You always answer the questions with markdown formatting using GitHub syntax.
+        system_prompt = """<|start_of_role|>system<|end_of_role|>You always answer the questions with markdown formatting using GitHub syntax.
 The markdown formatting you support: headings, bold, italic, links, tables, lists, code blocks, and blockquotes.
 You must omit that you answer the questions with markdown.
 
@@ -163,11 +168,15 @@ Your answers should not include any harmful, unethical, racist, sexist, toxic, d
 Please ensure that your responses are socially unbiased and positive in nature.
 If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct.
 If you don't know the answer to a question, please don't share false information.
+<|end_of_text|>
+<|start_of_role|>assistant<|end_of_role|>
 """
     elif "granite" in model_lower:
-        system_prompt = """You are Granite, an AI language model developed by IBM in 2024.
+        system_prompt = """<|start_of_role|>system<|end_of_role|>You are Granite, an AI language model developed by IBM in 2024.
 You are a cautious assistant. You carefully follow instructions.
 You are helpful and harmless and you follow ethical guidelines and promote positive behavior.
+<|end_of_text|>
+<|start_of_role|>assistant<|end_of_role|>
 """
     elif "mixtral" in model_lower:
         # Mixtral does not accept `system prompt`. Instead, extend the user prompt like the following.

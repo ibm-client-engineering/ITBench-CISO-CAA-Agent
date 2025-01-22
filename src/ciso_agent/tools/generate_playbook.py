@@ -17,6 +17,7 @@ import os
 from typing import Callable, Union
 
 from ciso_agent.llm import call_llm, extract_code
+from ciso_agent.tools.utils import trim_quote
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
@@ -51,6 +52,8 @@ class GeneratePlaybookTool(BaseTool):
 
     def _run(self, sentence: Union[str, dict], playbook_file: str = "playbook.yml") -> str:
         print("GeneratePlaybookTool is called")
+        playbook_file = trim_quote(playbook_file)
+
         spec = sentence
         if isinstance(spec, dict):
             try:

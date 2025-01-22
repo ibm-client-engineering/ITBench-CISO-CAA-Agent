@@ -19,6 +19,7 @@ from typing import Callable
 
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
+from ciso_agent.tools.utils import trim_quote
 
 
 class RunPlaybookToolInput(BaseModel):
@@ -51,6 +52,7 @@ This tool returns the following:
 
     def _run(self, host: str, playbook_file: str) -> str:
         print("RunPlaybookTool is called")
+        playbook_file = trim_quote(playbook_file)
 
         code = ""
         fpath = os.path.join(self.workdir, playbook_file)

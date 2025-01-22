@@ -90,12 +90,6 @@ Once you get a final answer, you can quit the work.
             role="Test",
             goal=goal,
             backstory="",
-            tools=[
-                RunOPARegoTool(workdir=workdir),
-                GenerateOPARegoTool(workdir=workdir),
-                RunPlaybookTool(workdir=workdir),
-                GeneratePlaybookTool(workdir=workdir),
-            ],
             llm=llm,
             verbose=True,
         )
@@ -105,6 +99,12 @@ Once you get a final answer, you can quit the work.
             description="""Check a rego policy for a given input file. If policy or input file are not ready, prepare them first.""",
             expected_output="""A boolean which indicates if the check is passed or not""",
             agent=test_agent,
+            tools=[
+                RunOPARegoTool(workdir=workdir),
+                GenerateOPARegoTool(workdir=workdir),
+                RunPlaybookTool(workdir=workdir),
+                GeneratePlaybookTool(workdir=workdir),
+            ],
         )
         report_task = Task(
             name="report_task",

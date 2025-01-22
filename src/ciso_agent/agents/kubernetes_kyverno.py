@@ -87,10 +87,6 @@ Once you get a final answer, you can quit the work.
             role="Test",
             goal=goal,
             backstory="",
-            tools=[
-                RunKubectlTool(workdir=workdir, read_only=False),
-                GenerateKyvernoTool(workdir=workdir),
-            ],
             llm=llm,
             verbose=True,
         )
@@ -103,6 +99,10 @@ Once you get a final answer, you can quit the work.
             ),
             expected_output="""All files you generated in your task and those explanations""",
             agent=test_agent,
+            tools=[
+                RunKubectlTool(workdir=workdir, read_only=False),
+                GenerateKyvernoTool(workdir=workdir),
+            ],
         )
         report_task = Task(
             name="report_task",

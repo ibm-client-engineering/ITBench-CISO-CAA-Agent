@@ -5,12 +5,10 @@ run:
   args:
   - -c
   - |
-    pid=$$
+  
     timestamp=$(date +%Y%m%d%H%M%S)
-    tmpdir=/tmp/agent/${timestamp}_${pid}
-    workspace=${tmpdir}/workspace
+    tmpdir=/tmp/agent/${timestamp}
     mkdir -p ${tmpdir}
-    mkdir -p ${workspace}
 
     cat /tmp/agent/scenario_data.json > ${tmpdir}/scenario_data.json
 
@@ -18,12 +16,13 @@ run:
     jq -r .vars.kubeconfig ${tmpdir}/scenario_data.json > ${tmpdir}/kubeconfig.yaml
     jq -r .vars.ansible_ini ${tmpdir}/scenario_data.json > ${tmpdir}/ansible.ini
     jq -r .vars.ansible_user_key ${tmpdir}/scenario_data.json > ${tmpdir}/user_key
+    chmod 600 ${tmpdir}/user_key
     sed -i.bak -E "s|(ansible_ssh_private_key_file=\")[^\"]*|\1${tmpdir}/user_key|" ${tmpdir}/ansible.ini
     
     sed "s|{{ kubeconfig }}|${tmpdir}/kubeconfig.yaml|g" ${tmpdir}/goal_template.txt > ${tmpdir}/goal.txt
-    sed -i.bak -E "s|{{ path_to_inventory }}|${tmpdir}/ansible.ini|g" ${tmpdir}/goal.txt
+    sed -i.bak -E "s|\{\{ path_to_inventory \}\}|${tmpdir}/ansible.ini|g" ${tmpdir}/goal.txt
 
-    echo "You can use \`${workspace}\` as your workdir." >> ${tmpdir}/goal.txt
+    echo "You can use \`${tmpdir}\` as your workdir." >> ${tmpdir}/goal.txt
     source .venv/bin/activate
 
     MANUAL="false"
@@ -35,10 +34,10 @@ run:
         echo "Waiting for the user to complete the task..."
         echo "To indicate completion, create the file: ${FLAG_FILE}"
         echo "Required input data is located in: ${tmpdir}."
-        echo "Please place the agent output files in: ${workspace}."
+        echo "Please place the agent output files in: ${tmpdir}."
         echo ""
         sleep 10
       done
     fi
 
-    tar -C ${workspace} -cf /tmp/agent/agent_data.tar .
+    tar -C ${tmpdir} -cf /tmp/agent/agent_data.tar .
