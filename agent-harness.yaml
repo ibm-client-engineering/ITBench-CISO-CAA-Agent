@@ -27,7 +27,7 @@ run:
 
     MANUAL="false"
     if [ "$MANUAL" == "false" ]; then
-      python src/ciso_agent/main.py --goal "`cat ${tmpdir}/goal.txt`" --auto-approve -o ${tmpdir}/agent-result.json
+      timeout 200 python src/ciso_agent/main.py --goal "`cat ${tmpdir}/goal.txt`" --auto-approve -o ${tmpdir}/agent-result.json || true
     else
       FLAG_FILE="${tmpdir}/complete.flag"
       while [ ! -f "$FLAG_FILE" ]; do
