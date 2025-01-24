@@ -45,5 +45,7 @@ COPY agent-harness.yaml /etc/ciso-agent/agent-harness.yaml
 
 RUN source .venv/bin/activate && pip install -e /etc/ciso-agent --no-cache-dir
 
+RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
+
 # Agent is executed by agent-harness of agent-bench-automation, so workdir should be agent-benchmark
 WORKDIR /etc/agent-benchmark
