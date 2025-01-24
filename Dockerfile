@@ -22,7 +22,7 @@ RUN apt update -y && apt install -y unzip ssh
 
 
 # install `ansible-playbook`
-RUN source .venv/bin/activate && pip install ansible-core jmespath kubernetes --no-cache-dir
+RUN source .venv/bin/activate && pip install ansible-core jmespath kubernetes==31.0.0 --no-cache-dir
 RUN source .venv/bin/activate && ansible-galaxy collection install kubernetes.core community.crypto
 # install `jq`
 RUN apt update -y && apt install -y jq
