@@ -13,14 +13,16 @@
 # limitations under the License.
 
 import os
+import json
 
 from crewai import LLM
 from langchain.schema import HumanMessage, SystemMessage
 from langchain_ibm import ChatWatsonx
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, AzureChatOpenAI
 
 api_domain_watsonx = "cloud.ibm.com"
-
+api_domain_azure = "azure.com"
+api_domain_azure_api = "azure-api.net"
 
 def init_agent_llm(model: str = "", api_url: str = "", api_key: str = ""):
     model = model or os.getenv("LLM_MODEL_NAME") or os.getenv("OPENAI_MODEL_NAME")
@@ -46,6 +48,17 @@ def init_agent_llm(model: str = "", api_url: str = "", api_key: str = ""):
             api_key=api_key,
             **params,
         )
+    elif is_azure_api(api_url=api_url):
+        params = get_params_from_env()
+        kwargs = {}
+        if "api-version" in params:
+            kwargs["api_version"] = params["api-version"]
+        llm = LLM(
+            model="azure/" + model,
+            base_url=api_url,
+            api_key=api_key,
+            **kwargs,
+        )
     else:
         llm = LLM(
             model=model,
@@ -69,14 +82,19 @@ def init_llm(model: str = "", api_url: str = "", api_key: str = ""):
 
     temperature = float(os.getenv("LLM_TEMPERATURE", "0.0"))
 
-    # Crew support GPT models by default, so we don't need anything here
-    if "gpt" in model.lower():
-        return ChatOpenAI(temperature=temperature, model=model, api_key=api_key)
-
-    elif is_watsonx_api(api_url=api_url):
+    if is_watsonx_api(api_url=api_url):
         # For Granite / Llama model, use WatsonX interface
         proj_id = get_watsonx_project_id()
         return init_watsonx_llm(model, api_url, api_key, proj_id)
+    elif is_azure_api(api_url=api_url):
+        params = get_params_from_env()
+        kwargs = {}
+        if "api-version" in params:
+            kwargs["api_version"] = params["api-version"]
+        return AzureChatOpenAI(temperature=temperature, model=model, api_key=api_key, base_url=api_url, **kwargs)
+    elif "gpt" in model.lower():
+        return ChatOpenAI(temperature=temperature, model=model, api_key=api_key, base_url=api_url)
+
     return None
 
 
@@ -95,6 +113,20 @@ def init_watsonx_llm(model: str = "", api_url: str = "", api_key: str = "", proj
 
 def is_watsonx_api(api_url: str):
     return api_url and api_domain_watsonx in api_url
+
+
+def is_azure_api(api_url: str):
+    return api_url and (api_domain_azure in api_url or api_domain_azure_api in api_url)
+
+
+def get_params_from_env():
+    params_str = os.getenv("LLM_PARAMS", "{}")
+    params = {}
+    try:
+        params = json.loads(params_str)
+    except Exception:
+        pass
+    return params
 
 
 def get_watsonx_model_params(model: str):
