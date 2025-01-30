@@ -6,102 +6,118 @@ CISO (Chief Information Security Officer) agents automate compliance assessments
 ## Prerequisites
 
 - `python` command (3.11 or later)
-- `kind` command
-- running `IT Bench` service ([Reference](https://github.ibm.com/project-polaris/agent-bench-automation.git))
+- [Sample Task Scenario](https://github.ibm.com/DistributedCloudResearch/sample-task-scenarios.git) setup
+  - This requires 1 Kubernetes cluster and/or 1 RHEL host. For more details, please refer to its README.
 
 ## Getting started
 
-**NOTE: Step 1 to 4 below are necessary only for the first time**
+### 1. Setup a Sample Task Scenario on your Kubernetes cluster / RHEL host
 
-### 1. Clone the repositories
+Follow the README and complete `make deploy_bundle` and `make inject_fault` commands for a single scenario.
+
+Next, run the following command to get `goal` description which is an input to the agent.
 
 ```bash
-$ mkdir <YOUR_WORKSPACE>
-$ cd <YOUR_WORKSPACE>
+$ make get 2>/dev/null | jq -r .goal_template
+```
 
-$ git clone https://github.ibm.com/project-polaris/agent-bench-automation.git
+Example Output:
+```bash
+I would like to check if the following condition is satisfiled, given a Kubernetes cluster with `kubeconfig.yaml`
+    Minimize the admission of containers wishing to share the host network namespace.
+
+To check the condition, do the following steps.
+- deploy a Kyverno policy to the cluster
+- chcek if the policy is correctly deployed.
+
+If deploying the policy failed and if you can fix the issue, you will do it and try deploying again.
+Once you get a final answer, you can quit the work.
+
+The cluster's kubeconfig is at `{{ kubeconfig }}`.
+```
+
+The above text is an example of ciso task scenarios.
+
+To provide this as input to the agent, ensure your kubeconfig file is available at a specific location in your machine and replace `{{ kubeconfig }}` with its actual file path.
+
+
+### 2. Clone this repository
+
+```bash
 $ git clone https://github.ibm.com/project-polaris/ciso-agent.git
-```
-
-### 2. Create python venv for the 2 applications
-
-For agent-bench-automation
-```bash
-$ cd agent-bench-automation
-$ python -m venv .venv
-$ source .venv/bin/activate
-$ pip install -e .
-$ cd ..
-```
-
-For ciso-agent
-```bash
 $ cd ciso-agent
-$ python -m venv .venv
-$ source .venv/bin/activate
+
+# [OPTIONAL] Create a virtual environment for python
+
 $ pip install -e .
-$ cd ..
 ```
 
 ### 3. Create `.env` file and set credentials
 
-Create `.env` file in the root dir of `ciso-agent` like the following.
+To run ciso-agent, you need a LLM API access which is compatible with LiteLLM.
 
-Please use your own keys for `OPENAI_API_KEY` and `LANGTRACE_API_KEY`.
+Many LLM services support it, including IBM watsonx.ai, OpenAI and Azure OpenAI Service.
 
-```bash
-OPENAI_API_KEY = <YOUR_OPENAI_API_KEY>
-OPENAI_MODEL_NAME = gpt-4o-mini
-CODE_GEN_MODEL = gpt-4o-mini
-MANAGER_AGENT_MODEL_NAME = gpt-4o-mini
-```
+To configure access, create a .env file in the root directory of ciso-agent with the following details.
 
-### 4. Prepare an Ingress-ready Kind cluster
+If you are unsure where to find your endpoint URL and other parameters, check the `curl` command arguments used for your LLM service.
+
+i. For **IBM watsonx.ai**
 
 ```bash
-$ cd agent-bench-automation
-$ kind create cluster --name minibench --config helm/ingress-kind-config.yaml
-Creating cluster "minibench" ...
- ✓ Ensuring node image (kindest/node:v1.31.0) 🖼
- ✓ Preparing nodes 📦
- ✓ Writing configuration 📜
- ✓ Starting control-plane 🕹️ 
- ✓ Installing CNI 🔌
- ✓ Installing StorageClass 💾
-Set kubectl context to "kind-minibench"
-You can now use your cluster with:
-
-kubectl cluster-info --context kind-minibench
-
-Not sure what to do next? 😅  Check out https://kind.sigs.k8s.io/docs/user/quick-start/
+# .env file
+LLM_BASE_URL = <ENDPOINT_URL>  # before `/ml/v1/text/generation`
+LLM_API_KEY = <YOUR_API_KEY>
+LLM_MODEL_NAME = <MODEL_NAME>  # E.g. "ibm/granite-3-8b-instruct"
+WATSONX_PROJECT_ID = <YOUR_WATSONX_PROJECT_ID>
 ```
 
-### 5. Create an agent and a benchmark on IT Bench Web UI
+ii. For **OpenAI**
+```bash
+# .env file
+LLM_API_KEY = <YOUR_API_KEY>
+LLM_MODEL_NAME = <MODEL_NAME>  # E.g. "gpt-4o-mini"
+# NOTE: The endpoint URL an be omitted for OpenAI
+```
 
-#### 5.1 Create an agent
+iii. For **Azure OpenAI Service**
+```bash
+# .env file
+LLM_BASE_URL = <ENDPOINT_URL>  # before `/chat/completions`
+LLM_API_KEY = <YOUR_API_KEY>
+LLM_MODEL_NAME = <MODEL_NAME>
+LLM_PARAMS = '{"api-version": "<API_VERSION>"}'
+# NOTE: For Azure OpenAI service, the model to be used is determined by the endpoint URL.
+#       Thus, <MODEL_NAME> here is ignored during LLM calls.
+```
 
-#### 5.2 Create an benchmark for the agent
 
-#### 5.3 Get agent manifest
+### 4. Start the agent
 
-### 6. Run Agent API Server via Helm
+Now, ready to run the agent.
+Please run the following command to start agent with goal description text which is obtained at the step 1.
 
 ```bash
-$ cd agent-bench-automation
-$ cd helm
-$ helm install minibench-server minibench-server/
+$ python src/ciso_agent/main.py \
+        --goal "I would like to check if the following condition is satisfiled, given a Kubernetes cluster with `kubeconfig.yaml`
+    Minimize the admission of containers wishing to share the host network namespace.
+
+To check the condition, do the following steps.
+- deploy a Kyverno policy to the cluster
+- chcek if the policy is correctly deployed.
+
+If deploying the policy failed and if you can fix the issue, you will do it and try deploying again.
+Once you get a final answer, you can quit the work.
+
+The cluster's kubeconfig is at `/tmp/agent/20250122154450/kubeconfig.yaml`.
+You can use `/tmp/agent/20250122154450/` as your workdir." \
+        --auto-approve
 ```
 
-### 7. Start the agent
+NOTE: In this example, the bottom line to tell agent where is its work directory is added.
 
-```bash
-$ cd agent-bench-automation
-$ PYTHONUNBUFFERED=1 \
-python agent_bench_automation/agent_harness/main.py \
-    --agent_directory ../ciso-agent \
-    -i ./docs/scenario-support/agent-manifest.json \
-    -c ./docs/scenario-support/agent-harness.yaml \
-    --host <HOSTNAME_OF_IT_BENCH_SERVICE> \
-    --port <PORT_NUM_OF_IT_BENCH_SERVICE> \
-    --ssl
-```
+### 5. Evaluation
+
+Once the agent completes its work, you can proceed with the evaluation step for the task scenario.
+
+Please refer to the README of the task scenario for further details.
