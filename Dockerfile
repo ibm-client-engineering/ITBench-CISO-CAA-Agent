@@ -1,29 +1,20 @@
-# User `bench-server` as a base image here
-# because it is a minimum image of agent-bench-automation codes
-FROM bench-server:latest AS base
+FROM python:3.11.10-slim
+
+RUN ln -sf /bin/bash /bin/sh
+RUN apt update -y && apt install -y curl gnupg2 unzip ssh
 
 RUN mkdir /etc/ciso-agent
 WORKDIR /etc/ciso-agent
 
-COPY requirements-dev.txt /etc/ciso-agent/requirements-dev.txt
-# ciso-agent deps are many, so install them here (this reduce the time for installing code changes later)
-RUN python -m venv .venv && source .venv/bin/activate && pip install -r requirements-dev.txt --no-cache-dir
-
-#-----------------
-# second stage
-#-----------------
-FROM bench-server:latest
-COPY --from=base /etc/ciso-agent /etc/ciso-agent
-
-WORKDIR /etc/ciso-agent
-
-# need unzip for `aws` command
-RUN apt update -y && apt install -y unzip ssh
-
+# install dependencies here to avoid too much build time
+COPY ./pyproject.toml /etc/ciso-agent
+COPY requirements-dev.txt /etc/ciso-agent
+RUN pip install -r requirements-dev.txt --no-cache-dir
 
 # install `ansible-playbook`
-RUN source .venv/bin/activate && pip install ansible-core jmespath kubernetes==31.0.0 --no-cache-dir
-RUN source .venv/bin/activate && ansible-galaxy collection install kubernetes.core community.crypto
+RUN pip install ansible-core jmespath kubernetes==31.0.0 --no-cache-dir
+RUN ansible-galaxy collection install kubernetes.core community.crypto
+RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 # install `jq`
 RUN apt update -y && apt install -y jq
 # install `kubectl`
@@ -40,12 +31,4 @@ RUN curl -L -o opa https://github.com/open-policy-agent/opa/releases/download/v1
     mv ./opa /usr/local/bin/opa
 
 COPY src /etc/ciso-agent/src
-COPY pyproject.toml /etc/ciso-agent/pyproject.toml
-COPY agent-harness.yaml /etc/ciso-agent/agent-harness.yaml
-
-RUN source .venv/bin/activate && pip install -e /etc/ciso-agent --no-cache-dir
-
-RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
-
-# Agent is executed by agent-harness of agent-bench-automation, so workdir should be agent-benchmark
-WORKDIR /etc/agent-benchmark
+RUN pip install -e /etc/ciso-agent --no-cache-dir

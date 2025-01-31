@@ -5,15 +5,18 @@ CISO (Chief Information Security Officer) agents automate compliance assessments
 
 ## Prerequisites
 
-- `python` command (3.11 or later)
+- Access to an OpenAI-Compatible LLM service
+  - tested with `IBM watsonx.ai`, `OpenAI` and `Azure OpenAI Service`.
 - [Sample Task Scenario](https://github.ibm.com/DistributedCloudResearch/sample-task-scenarios.git) setup
   - This requires 1 Kubernetes cluster and/or 1 RHEL host. For more details, please refer to its README.
+- `python` command (tested with `3.11` )
+- `docker` or `podman` command (tested with docker `26.1.0` and podman `5.1.2` )
 
 ## Getting started
 
 ### 1. Setup a Sample Task Scenario on your Kubernetes cluster / RHEL host
 
-Follow the README and complete `make deploy_bundle` and `make inject_fault` commands for a single scenario.
+Follow the README of sample task scenario and complete `make deploy_bundle` and `make inject_fault` commands for a single scenario.
 
 Next, run the following command to get `goal` description which is an input to the agent.
 
@@ -38,27 +41,40 @@ The cluster's kubeconfig is at `{{ kubeconfig }}`.
 
 The above text is an example of ciso task scenarios.
 
-To provide this as input to the agent, ensure your kubeconfig file is available at a specific location in your machine and replace `{{ kubeconfig }}` with its actual file path.
-
+Please keep this goal text for running the agent later.
 
 ### 2. Clone this repository
 
 ```bash
 $ git clone https://github.ibm.com/project-polaris/ciso-agent.git
 $ cd ciso-agent
-
-# [OPTIONAL] Create a virtual environment for python
-
-$ pip install -e .
 ```
 
-### 3. Create `.env` file and set credentials
+### 3. Build agent container image
+
+CISO Agent is designed to run as a container. Please build the container image with this command.
+
+```bash
+$ docker build . -f Dockerfile -t ciso-agent:latest
+```
+
+If you are using `podman` runtime instead of `docker`, this is the command.
+
+```bash
+$ podman build . -f Dockerfile -t ciso-agent:latest
+```
+
+This command could take a several minutes normally.
+
+**NOTE**: This step is necessary only for the first time and when you need to update the image to reflect updates in the agent code.
+
+### 3. Create `.env` file and set LLM API credentials
 
 To run ciso-agent, you need a LLM API access which is compatible with LiteLLM.
 
 Many LLM services support it, including IBM watsonx.ai, OpenAI and Azure OpenAI Service.
 
-To configure access, create a .env file in the root directory of ciso-agent with the following details.
+To configure access, create a .env file with the following details.
 
 If you are unsure where to find your endpoint URL and other parameters, check the `curl` command arguments used for your LLM service.
 
@@ -91,15 +107,36 @@ LLM_PARAMS = '{"api-version": "<API_VERSION>"}'
 #       Thus, <MODEL_NAME> here is ignored during LLM calls.
 ```
 
+Any location is fine for `.env` file, but the file needs to be mountable by the agent container later.
 
 ### 4. Start the agent
 
 Now, ready to run the agent.
-Please run the following command to start agent with goal description text which is obtained at the step 1.
+
+Inputs to the agent is the following 3 things.
+- Workdir 
+  - The directory for scenario. Before agent starts, `kubeconfig.yaml` and/or `inventory.ansible.ini` must be planced here.
+- `.env` file
+- Goal text
+
+Please run the following command with these inputs.
+
+Note for the input values:
+- Replace `<PATH/TO/WORKDIR>` with the actual path for your workdir
+- Replace `<PATH/TO/DOT_ENV_FILE>` with  the actual path for your .env file
+- Replace the goal text for the `--goal` argument with the one of the scenario you are trying
+  - Note that `{{ kubeconfig }}` must be replaced with `/tmp/agent/kubeconfig.yaml`.
+  - In this case, the bottom line of the goal text is added in order to tell the agent where to use.
+
+If you use `podman` engine, please replace `docker` with `podman` below.
 
 ```bash
-$ python src/ciso_agent/main.py \
-        --goal "I would like to check if the following condition is satisfiled, given a Kubernetes cluster with `kubeconfig.yaml`
+$ docker run --rm -ti --name ciso-agent \
+    -v <PATH/TO/WORKDIR>:/tmp/agent \
+    -v <PATH/TO/DOT_ENV_FILE>:/etc/ciso-agent/.env \
+    ciso-agent:latest \
+    python src/ciso_agent/main.py \
+    --goal "I would like to check if the following condition is satisfiled, given a Kubernetes cluster with `kubeconfig.yaml`
     Minimize the admission of containers wishing to share the host network namespace.
 
 To check the condition, do the following steps.
@@ -109,12 +146,22 @@ To check the condition, do the following steps.
 If deploying the policy failed and if you can fix the issue, you will do it and try deploying again.
 Once you get a final answer, you can quit the work.
 
-The cluster's kubeconfig is at `/tmp/agent/20250122154450/kubeconfig.yaml`.
-You can use `/tmp/agent/20250122154450/` as your workdir." \
-        --auto-approve
+The cluster's kubeconfig is at `/tmp/agent/kubeconfig.yaml`.
+You can use `/tmp/agent` as your workdir." \
+    --auto-approve
 ```
 
-NOTE: In this example, the bottom line to tell agent where is its work directory is added.
+If the inputs and scenario setup are correctly configured, the agent will display logs similar to the image below:
+
+<img src="img/agent_log_example_beginning.png" alt="Example agent log at the beginning">
+
+The agent will then continue its work until it achieves the goal.
+
+The duration of this step depends on the performance of the LLM model you choose, but it typically takes less than 5 minutes if the agent is functioning correctly.
+
+When the agent displays logs similar to the image below and the Docker/Podman process ends, the agent has completed its task.
+
+<img src="img/agent_log_example_result.png" alt="Example agent log for results">
 
 ### 5. Evaluation
 
