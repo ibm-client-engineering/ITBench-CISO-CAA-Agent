@@ -12,7 +12,7 @@ COPY requirements-dev.txt /etc/ciso-agent
 RUN pip install -r requirements-dev.txt --no-cache-dir
 
 # install `ansible-playbook`
-RUN pip install ansible-core jmespath kubernetes==31.0.0 --no-cache-dir
+RUN pip install --upgrade ansible-core jmespath kubernetes==31.0.0 setuptools==70.0.0 --no-cache-dir
 RUN ansible-galaxy collection install kubernetes.core community.crypto
 RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 # install `jq`
