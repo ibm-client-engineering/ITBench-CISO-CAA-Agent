@@ -40,7 +40,8 @@ def get_llm_params(model: str = "", api_url: str = "", api_key: str = ""):
     return model, api_url, api_key
 
 def init_agent_llm(model: str = "", api_url: str = "", api_key: str = ""):
-    model, api_url, api_key = get_llm_params()
+    # pass arguments
+    model, api_url, api_key = get_llm_params(model=model, api_url=api_url, api_key=api_key)
 
     temperature = float(os.getenv("LLM_TEMPERATURE", "0.0"))
 
@@ -77,7 +78,8 @@ def init_agent_llm(model: str = "", api_url: str = "", api_key: str = ""):
 
 
 def init_llm(model: str = "", api_url: str = "", api_key: str = ""):
-    model, api_url, api_key = get_llm_params()
+    # pass arguments
+    model, api_url, api_key = get_llm_params(model=model, api_url=api_url, api_key=api_key)
 
     temperature = float(os.getenv("LLM_TEMPERATURE", "0.0"))
 
