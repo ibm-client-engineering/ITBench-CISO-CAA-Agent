@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
 import datetime
 import json
 import os
@@ -175,39 +174,33 @@ You can omit `namespace` in `updated_resource` if the policy is a cluster-scope 
         return {"result": result}
 
 
-if __name__ == "__main__":
-    default_compliance = "Ensure that the cluster-admin role is only used where required"
-    parser = argparse.ArgumentParser(description="TODO")
-    parser.add_argument("-c", "--current-compliance", default=default_compliance, help="The compliance description for the agent to do something for")
-    parser.add_argument(
-        "-u", "--updated-compliance", default=default_compliance, help="The additional compliance description for the agent to do something for"
-    )
-    parser.add_argument("-k", "--kubeconfig", required=True, help="The path to the kubeconfig file")
-    parser.add_argument("-w", "--workdir", default="", help="The path to the work dir which the agent will use")
-    parser.add_argument("-o", "--output", help="The path to the output JSON file")
-    args = parser.parse_args()
-
-    if args.workdir:
-        os.makedirs(args.workdir, exist_ok=True)
-
-    if args.kubeconfig:
-        dest_path = os.path.join(args.workdir, "kubeconfig.yaml")
-        shutil.copyfile(args.kubeconfig, dest_path)
+def main(kubeconfig, output, workdir: str = "", current_compliance: str = "Ensure that the cluster-admin role is only used where required", updated_compliance: str = "Ensure that the cluster-admin role is only used where required"):
+    if workdir:
+        os.makedirs(workdir, exist_ok=True)
+    
+    if kubeconfig:
+        dest_path = os.path.join(workdir, "kubeconfig.yaml")
+        shutil.copyfile(kubeconfig, dest_path)
 
     inputs = dict(
-        current_compliance=args.current_compliance,
-        updated_compliance=args.updated_compliance,
-        workdir=args.workdir,
+        current_compliance = current_compliance,
+        updated_compliance = updated_compliance,
+        workdir = workdir,
     )
+
     _result = KubernetesKyvernoUpdateCrew().kickoff(inputs=inputs)
     result = _result.get("result")
 
     result_json_str = json.dumps(result, indent=2)
 
-    print("---- Result ----")
-    print(result_json_str)
-    print("----------------")
-
-    if args.output:
-        with open(args.output, "w") as f:
+    if output:
+        with open(output, "w") as f:
             f.write(result_json_str)
+    else:
+        print("---- Result ----")
+        print(result_json_str)
+        print("----------------")
+
+
+if __name__ == "__main__":
+    main()

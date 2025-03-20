@@ -12,32 +12,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
 import json
-
 from ciso_agent.manager import CISOManager, CISOState
+from typing import Optional
 
 
-def run(inputs: dict):
-    manager = CISOManager(
-        eval_policy=False,
-    )
-    state = inputs
-    output = manager.invoke(state)
-    return output
+def run(inputs: dict) -> dict:
+    """
+    Runs the CISO agent with the provided input state.
 
+    Args:
+        inputs (dict): Dictionary representing the CISOState.
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="TODO")
-    parser.add_argument("-g", "--goal", default="", help="The compliance goal for the agent to achieve")
-    parser.add_argument("-o", "--output", default="", help="The path to the output JSON file")
-    parser.add_argument("-a", "--auto-approve", action="store_true", help="do nothing for now")
-    args = parser.parse_args()
+    Returns:
+        dict: The result returned by the agent after invocation.
+    """
+    manager = CISOManager(eval_policy=False)
+    return manager.invoke(inputs)
 
-    inputs = CISOState(goal=args.goal)
+def main(goal: str = "", output: Optional[str] = None) -> None:
+    """
+    Main entry point for running the agent with a simple goal string.
+
+    Args:
+        goal (str): The compliance goal for the agent to achieve.
+    """
+    inputs = CISOState(goal=goal)
     result = run(inputs=inputs)
     result_json_str = json.dumps(result, indent=2)
-
-    if args.output:
-        with open(args.output, "w") as f:
+    if output:
+        with open(output, "w") as f:
             f.write(result_json_str)
+        print("Output saved to ", output)
+    else:
+        print(result_json_str)
+
+if __name__ == "__main__":
+    main()

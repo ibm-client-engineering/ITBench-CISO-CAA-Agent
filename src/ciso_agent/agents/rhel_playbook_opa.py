@@ -155,31 +155,28 @@ Just to report the result.
 
         return {"result": result}
 
-
-if __name__ == "__main__":
-    default_compliance = "Ensure that the cron daemon is enabled"
-    parser = argparse.ArgumentParser(description="TODO")
-    parser.add_argument("-c", "--compliance", default=default_compliance, help="The compliance description for the agent to do something for")
-    parser.add_argument("-w", "--workdir", default="", help="The path to the work dir which the agent will use")
-    parser.add_argument("-o", "--output", help="The path to the output JSON file")
-    args = parser.parse_args()
-
-    if args.workdir:
-        os.makedirs(args.workdir, exist_ok=True)
+def main(output, workdir: str = "", compliance: str = "Ensure that the cron daemon is enabled"):
+    if workdir:
+        os.makedirs(workdir, exist_ok=True)
 
     inputs = dict(
-        compliance=args.compliance,
-        workdir=args.workdir,
+        compliance = compliance,
+        workdir = workdir,
     )
+
     _result = RHELPlaybookOPACrew().kickoff(inputs=inputs)
     result = _result.get("result")
 
     result_json_str = json.dumps(result, indent=2)
 
-    print("---- Result ----")
-    print(result_json_str)
-    print("----------------")
-
-    if args.output:
-        with open(args.output, "w") as f:
+    if output:
+        with open(output, "w") as f:
             f.write(result_json_str)
+    else:
+        print("---- Result ----")
+        print(result_json_str)
+        print("----------------")
+
+
+if __name__ == "__main__":
+    main()
