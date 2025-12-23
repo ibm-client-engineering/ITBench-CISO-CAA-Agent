@@ -19,7 +19,7 @@ langtrace-python-sdk = "3.3.29"
 # to reduce install time that can be very long if not specified
 langchain-cohere = "0.3.4"
 huggingface-hub = "0.27.1"
-langchain-core = "0.3.31"
+langchain-core = "0.3.81"
 selenium = "4.28.0"
 
 [tool.poetry.scripts]
