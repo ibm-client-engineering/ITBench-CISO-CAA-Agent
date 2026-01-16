@@ -169,7 +169,7 @@ ptyprocess==0.7.0 ; python_version >= "3.10" and python_version < "3.13" and sys
 pure-eval==0.2.3 ; python_version >= "3.10" and python_version < "3.13"
 pyarrow==19.0.1 ; python_version >= "3.10" and python_version < "3.13"
 pyasn1-modules==0.4.1 ; python_version >= "3.10" and python_version < "3.13"
-pyasn1==0.6.1 ; python_version >= "3.10" and python_version < "3.13"
+pyasn1==0.6.2 ; python_version >= "3.10" and python_version < "3.13"
 pycparser==2.22 ; python_version >= "3.10" and python_version < "3.13" and (os_name == "nt" or platform_python_implementation != "PyPy") and (implementation_name != "pypy" or platform_python_implementation != "PyPy")
 pydantic-core==2.27.2 ; python_version >= "3.10" and python_version < "3.13"
 pydantic-settings==2.8.0 ; python_version >= "3.10" and python_version < "3.13"
